@@ -22,3 +22,6 @@ out/
 stress/*/
 /testsuite/out/
 venv/
+
+.devcontainer/*/secrets.env
+.devcontainer/*/auth.ids.r53.adacore.com.json

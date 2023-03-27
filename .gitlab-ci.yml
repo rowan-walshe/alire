@@ -1,0 +1,54 @@
+stages:
+  - build
+
+# TODO build dockerfiles
+build_images:
+  stage: build
+  services:
+    - image:ci-images-builder
+    - privileged
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+      changes:
+        - .devcontainer/base_images/**/*
+      when: on_success
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "schedule"
+      when: on_success
+  before_script:
+    - service docker start
+  script:
+    - export $(xargs -0 -L1 -a /proc/1/environ | grep AWS_CONTAINER_CREDENTIALS_RELATIVE_URI)
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - .devcontainer/base_images/ci_build_and_push.sh
+
+## TODO Build
+# .build:
+#   stage: build
+#   rules:
+#     - when: always
+#   script:
+#     - if [ -e /root/env ]; then source /root/env; fi
+#     - git submodule update --init --recursive
+#     - alr build
+#   artifacts:
+#     when: on_success
+#     paths:
+#       - bin/alr
+
+# build_gnatstable:
+#   extends: .build
+#   services:
+#     - image:alire-devenv-gnatstable
+
+# build_fsf-12.2.1:
+#   extends: .build
+#   services:
+#     - image:alire-devenv-fsf-12.2.1
+
+## TODO LSIF dump
+
+## TODO Test & Coverage
+
+## TODO CodePeer
+
+## TODO Package
