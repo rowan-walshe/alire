@@ -16,6 +16,7 @@ with Alire.Lockfiles;
 with Alire.Paths;
 with Alire.Platforms.Current;
 with Alire.Root;
+with Alire.Shared;
 with Alire.Solutions;
 with Alire.Toolchains;
 
@@ -471,18 +472,22 @@ package body Alr.Commands is
          --  Also use a fancier busy spinner
       end if;
 
+      --  Set overriden config path. For now, we tie the config and cache paths
+      --  to a single location when overridden, as this was the old behavior
+      --  before we started using ~/.cache for dependencies, so people using
+      --  custom config locations will expect shared dependencies to be at the
+      --  new config location, as always.
+
       if Command_Line_Config_Path /= null and then
          Command_Line_Config_Path.all /= ""
       then
-         if not Alire.Check_Absolute_Path (Command_Line_Config_Path.all) then
-            --  Make an absolute path from user relative path
-            Alire.Config.Edit.Set_Path
-              (Ada.Directories.Full_Name (Command_Line_Config_Path.all));
-         else
-
-            --  Use absolute path from user
-            Alire.Config.Edit.Set_Path (Command_Line_Config_Path.all);
-         end if;
+         declare
+            Config_Path : constant Alire.Absolute_Path
+              := Ada.Directories.Full_Name (Command_Line_Config_Path.all);
+         begin
+            Alire.Config.Edit.Set_Path (Config_Path);
+            Alire.Shared.Set_Path (Config_Path);
+         end;
       end if;
 
       Create_Alire_Folders;
@@ -537,6 +542,19 @@ package body Alr.Commands is
         .Append ("crate^version" & ASCII.HT & "Major-compatible version")
         .Append ("crate~version" & ASCII.HT & "Minor-compatible version");
    end Crate_Version_Sets;
+
+   --------------
+   -- Has_Root --
+   --------------
+
+   function Has_Root (Cmd : in out Command'Class) return Boolean is
+   begin
+      Cmd.Requires_Valid_Session;
+      return True;
+   exception
+      when Alire.Checked_Error =>
+         return False;
+   end Has_Root;
 
    ----------
    -- Root --
