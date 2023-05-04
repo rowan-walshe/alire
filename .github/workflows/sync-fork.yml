@@ -1,0 +1,19 @@
+name: Sync Fork
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 minutes
+  workflow_dispatch: # on button click
+  push:
+    branches:
+      - sync-fork
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Sync Fork
+        run: gh repo sync git@github.com:AdaCore/alire.git
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
